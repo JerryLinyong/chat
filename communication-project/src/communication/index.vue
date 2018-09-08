@@ -7,47 +7,129 @@
         <div class="myself">
           <img src="./head1.jpg" alt="无法显示图片" class="userImg">
           <span>我</span>
+          <ul class="selfInfo">
+            <li>修改信息</li>  
+            <li>安全管理</li>
+            <li><a href="/logIn">退出</a></li>
+          </ul> 
         </div>
       </div>
     </div>
     <nav>
       <p class="brandName">eco</p>
-      <img src="./head1.jpg" alt="无法显示图片" class="userImg">
-      <p class="userId">18574545555</p>
-      <ul class="items">
-        <li>沟通</li>
-        <li>部门管理</li>
-        <li>推荐人员</li>
+      <img src="./head1.jpg" alt="无法显示图片" class="userImg" @click="chatBox()">
+      <button class="addUser" @click="addChild()">创建子账号</button>
+      <p class="deviceItems">已有设备</p>
+      <ul class="devices" @click="getUsers">
+        <li v-for="device in devices" :key="device.wxId" :deviceName="device.deviceName" :wxId="device.wxId" :wxIcon='device.wxIcon' :class='{activeBG:(wxId==device.wxId)?true:false}' class="deviceName"><img src="./head1.jpg" alt="#" style="margin:0 14px 0 0;width:40px;height:40px" :deviceName="device.deviceName" :wxId="device.wxId" :wxIcon='device.wxIcon'>{{device.deviceName}}
+          <span class="redDot" v-if='hasMsg'></span>
+        </li>
       </ul>
     </nav>
     <div class="insert">
-      <component :is="session"></component>
+      <component :is="session" :ryToken='ryToken' :wxUsers="wxUsers" :devices='devices' :wxIcon='wxIcon' :wxId='wxId' :deviceName='deviceName' :parentShortcutPhrase='parentShortcutPhrase'></component>
     </div>
   </div>
 </template>
 
 <script>
   import chatBox from './main/chatBox/index'
+  import childList from './main/childList/index'
   export default {
     components: {
-    'chatBox': chatBox
+      'chatBox': chatBox,
+      'childList': childList
     },
     data () {
-    return {
-      session: "chatBox" 
+      return {
+        session: "chatBox" ,
+        devices: [],
+        token: '',
+        ryToken: '',
+        deviceIds: '',
+        wxUsers: [],
+        wxIcon: '',
+        wxId: '',
+        deviceName: '',
+        parentShortcutPhrase: [],
+        hasMsg: 1
+      }
+    },
+    methods: {
+      getUsers: function (e) {
+        this.session = 'chatBox'
+        this.hasMsg = 0
+        document.querySelector('.sended').innerHTML = ''
+        this.deviceName = e.target.getAttribute('deviceName')
+        this.wxId = e.target.getAttribute('wxId')
+        this.wxIcon = e.target.getAttribute('wxIcon')
+        this.$http.get('http://192.168.1.223:8120/demo/api/v1/agent/'+e.target.getAttribute('wxId'),).then(function(res){
+          console.log(res)
+          for (var i=0;i<res.body.data.length;i++){
+            this.wxUsers.push(res.body.data[i])
+          }
+        })
+      },
+      chatBox: function () {
+        this.session = 'chatBox'
+      },
+      addChild: function () {
+        console.log('2')
+        this.session = "childList"
+      },
+      logIn: function () {
+        this.session = 'logIn'
+      }
+    },
+    mounted () { 
+    },
+    created () {
+      function getCookie (cname) {
+        var name = cname + "=";
+        var ca = document.cookie.split(';');
+        for (var i=0; i<ca.length; i++) {
+          var c = ca[i].trim();
+          if (c.indexOf(name)==0) return c.substring(name.length,c.length);
+        }
+        return "";
+      }      
+      this.masterFlag = getCookie('masterFlag')
+      this.token = getCookie('token')
+      this.ryToken = getCookie('ryToken')
+      this.$http.get('http://192.168.1.223:8120/demo/api/v1/user/child/device/list',{headers: {accessToken:this.token}}).then(function(getRes){
+        for (var i=0;i<getRes.body.data.length;i++) {
+          this.devices.push(getRes.body.data[i])
+        }
+        console.log(getRes)
+      })
+      this.$http.get('http://192.168.1.223:8120/demo/api/v1/parentShortcutPhrase/list',{headers: {accessToken:this.token}}).then(function(getRes){
+        for (var i=0;i<getRes.body.data.length;i++) {
+          this.parentShortcutPhrase.push(getRes.body.data[i])
+        }
+        console.log(getRes)
+      })
     }
-  },
   }
 </script>
 
 <style scoped lang="stylus">
+  .redDot 
+    position absolute
+    top 10px
+    left 64px
+    width 10px
+    height 10px
+    border-radius 10px
+    background red
+  .activeBG 
+    background rgba(77,149,250,0.8)
+
   .header 
     position absolute
     left 160px
     top: 0
     width calc(100vw - 160px)
     height: 60px
-    overflow: hidden
     .controlItems 
       display flex
       float right
@@ -67,7 +149,30 @@
         width: 30px
         height: 30px
         margin-right: 10px
-
+      .myself
+        position relative
+        text-align center
+        .selfInfo
+          display none
+          position absolute
+          z-index 2
+          top 60px
+          width 100px
+          padding 0
+          margin 0
+          background white
+          list-style none 
+          box-shadow 0 0 4px 2px #ddd 
+          a
+            text-decoration none
+            color black
+        &:hover
+          .selfInfo
+            display block 
+            li 
+              padding 10px 0
+              &:hover
+                background #4d95fa
   nav 
     position: absolute
     top: 0
@@ -77,6 +182,16 @@
     text-align: center
     background: #252830
     font-family: "Helvetica Neue", Helvetica, STHeiTi, sans-serif
+    .devices
+      margin-top 0
+      .deviceName
+        position relative
+    .deviceItems
+      font-size 20px
+      color white
+      margin 0
+      padding 16px
+      border-bottom 1px solid #ddd
     .brandName 
       font-size: 50px;
       color: #4d95fa;
@@ -88,19 +203,24 @@
       margin 20px 0
       border-radius 60px
       border 2px solid grey
-    .userId 
-      color white
+    .addUser
+      width 100px
+      background  white
       font-size 14px
       font-weight bold
-      margin 10px
+      padding 10px
+      border-radius 8px
+      border none
+      &:focus
+        outline none
     ul 
       list-style none
       padding 0
       li 
+        display flex
+        align-items center
         color white
-        padding 12px
-        padding-left 8px
-        margin-left 4px 
+        padding 10px 18px
         color #bebfc1
         font-weight bold
         font-size 14px
@@ -117,5 +237,6 @@
     background #ddd
     height calc(100vh - 60px)
     width calc(100vw - 160px)
+    overflow hidden
   
 </style>
