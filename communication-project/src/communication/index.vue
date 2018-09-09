@@ -21,8 +21,11 @@
       <button class="addUser" @click="addChild()">创建子账号</button>
       <p class="deviceItems">已有设备</p>
       <ul class="devices" @click="getUsers">
-        <li v-for="device in devices" :key="device.wxId" :deviceName="device.deviceName" :wxId="device.wxId" :wxIcon='device.wxIcon' :class='{activeBG:(wxId==device.wxId)?true:false}' class="deviceName"><img src="./head1.jpg" alt="#" style="margin:0 14px 0 0;width:40px;height:40px" :deviceName="device.deviceName" :wxId="device.wxId" :wxIcon='device.wxIcon'>{{device.deviceName}}
-          <span class="redDot" v-if='hasMsg'></span>
+        <li v-for="device in devices" :key="device.wxId" :class='{activeBG:(wxId==device.wxId)?true:false}' class="deviceName">
+          <div style='position:absolute;width:100%;height:100%' :deviceName="device.deviceName" :wxId="device.wxId" :wxIcon='device.wxIcon'></div>
+          <img src="./head1.jpg" alt="#" style="margin:0 14px 0 0;width:40px;height:40px">
+          <span>{{device.deviceName}}</span>
+          <span class="redDot" :id='"msgRD"+device.wxId'></span>
         </li>
       </ul>
     </nav>
@@ -51,18 +54,18 @@
         wxIcon: '',
         wxId: '',
         deviceName: '',
-        parentShortcutPhrase: [],
-        hasMsg: 1
+        parentShortcutPhrase: []
       }
     },
     methods: {
       getUsers: function (e) {
+        this.wxIcon = e.target.getAttribute('wxIcon')
+        this.wxId = e.target.getAttribute('wxId')
+        this.wxUsers = []
         this.session = 'chatBox'
-        this.hasMsg = 0
+        document.querySelector('#msgRD' + this.wxId).style.display = 'none'
         document.querySelector('.sended').innerHTML = ''
         this.deviceName = e.target.getAttribute('deviceName')
-        this.wxId = e.target.getAttribute('wxId')
-        this.wxIcon = e.target.getAttribute('wxIcon')
         this.$http.get('http://192.168.1.223:8120/demo/api/v1/agent/'+e.target.getAttribute('wxId'),).then(function(res){
           console.log(res)
           for (var i=0;i<res.body.data.length;i++){
@@ -113,14 +116,6 @@
 </script>
 
 <style scoped lang="stylus">
-  .redDot 
-    position absolute
-    top 10px
-    left 64px
-    width 10px
-    height 10px
-    border-radius 10px
-    background red
   .activeBG 
     background rgba(77,149,250,0.8)
 
@@ -186,6 +181,14 @@
       margin-top 0
       .deviceName
         position relative
+        .redDot
+          position absolute
+          top 10px
+          left 64px
+          width 10px
+          height 10px
+          border-radius 10px
+          background red
     .deviceItems
       font-size 20px
       color white
@@ -229,7 +232,6 @@
         &:hover 
           border-left 4px #4d95fa solid
           background rgba(200,200,200,.4)
-  
   .insert 
     position absolute
     top 60px

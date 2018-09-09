@@ -5,16 +5,21 @@
       <div class="sideBar">
         <input type="text" placeholder="搜索">
         <img src="./search.png" alt="#">
-        <div class="sortPeople" @click='clearContent()'>
+        <div class="sortPeople">
           <div class="allP" @click='sortUsers=1' :class="{activeBG:(sortUsers==1)?true:false}">全部</div>
           <div class="starP" @click='sortUsers=2' :class="{activeBG:(sortUsers==2)?true:false}">星标</div>
           <div class="blackP" @click='sortUsers=3' :class="{activeBG:(sortUsers==3)?true:false}">黑名单</div>
         </div>
-        <ul id="userList" @click='startChat' v-if='sortUsers==1'>
-          <li class="users" v-for='wxUser in wxUsers' :key='wxUser.wxId' :targetWxName='wxUser.wxName' :targetWxId='wxUser.wxId' :targetWxIcon='wxUser.wxIcon' :class='{activeBG:(targetWxId==wxUser.wxId)?true:false}'>
-            <img :src="wxUser.wxIcon" alt="#" :targetWxId='wxUser.wxId' :targetWxIcon='wxUser.wxIcon' :targetWxName='wxUser.wxName'>
-            <span :targetWxId='wxUser.wxId' :targetWxIcon='wxUser.wxIcon' :targetWxName='wxUser.wxName'>{{wxUser.wxName}}</span>
-            <span class="redDot" v-if='hasMsg'></span>
+        <ul class="userList" @click='startChat' v-if='sortUsers==1'>
+          <li class="users" :id='"user"+wxUser.ryTargetId' v-for='wxUser in wxUsers' :key='wxUser.wxId' :class='{activeBG:(targetWxId==wxUser.ryTargetId)?true:false}'>
+            <div style='position:absolute;width:100%;height:100%' :targetWxId='wxUser.ryTargetId' :targetWxIcon='wxUser.ryIconUrl' :targetWxName='wxUser.ryName'></div>
+            <img :src="wxUser.ryIconUrl" alt="#">
+            <div>
+              <div style='width:100px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap'>{{wxUser.ryName}}</div>
+              <div style='position:absolute;top:6px;right:10px;white-space:nowrap;color:#777;font-size:12px'>{{wxUser.rySendTime}}</div>
+              <div style='width:120px;color:#777;font-size:14px;text-overflow:ellipsis;overflow:hidden'>{{wxUser.messageContent}}</div>
+            </div>
+            <span class="redDot" :id='"msgRD"+wxUser.ryTargetId'></span>
           </li>
         </ul>
       </div>
@@ -35,7 +40,8 @@
                 </div>
               </div>
               <img src="./emoji.png" alt="#"></div>
-            <input type="file" id="upFile" name="file" @change="addFile()" style="width:40px;height:40px;opacity:0;position:absolute;left:50px;font-size:0;"><img src="./img.png" alt="#">
+            <input type="file" id="upFile" name="file" @change="addFile()" style="width:40px;height:40px;opacity:0;position:absolute;left:50px;font-size:0;">
+            <img src="./img.png" alt="#">
             <div class="redPocket" @mouseenter='visible' @mouseleave='invisible' @click='showModel = true '>
               <img src="./redPocket.png" alt="#">
               <p v-show='see' class="money">发红包</p>
@@ -67,7 +73,8 @@
         </div>
         <div class='resBody' v-if='quickItems==1'>
           <div class="quickRes">
-            <span :class="{activeBG2:(resItems==1)?true:false}"  @click='resItems="1"'>个人快捷语</span><span :class="{activeBG2:(resItems==2)?true:false}"  @click='resItems="2"'>公共快捷语</span>
+            <span :class="{activeBG2:(resItems==1)?true:false}"  @click='resItems="1"'>个人快捷语</span>
+            <span :class="{activeBG2:(resItems==2)?true:false}"  @click='resItems="2"'>公共快捷语</span>
           </div>
           <div class='personRes' v-if='resItems==1'>
             <div class="resEdit" contenteditable="true"></div>
@@ -106,8 +113,7 @@
         money:'',
         targetWxIcon: '',
         targetWxName: '',
-        sortUsers: '1',
-        hasMsg: 1
+        sortUsers: '1'
       }
     },
     methods: {
@@ -119,12 +125,12 @@
         this.see=false;
       },
       startChat: function (e) {
-        this.hasMsg = 0
         this.targetWxName = e.target.getAttribute('targetWxName')
+        document.querySelector('#msgRD'+e.target.getAttribute('targetWxId')).style.display = 'none'
         document.querySelector('.sended').innerHTML = ''
         this.targetWxId = e.target.getAttribute('targetWxId')
         this.targetWxIcon = e.target.getAttribute('targetWxIcon')
-        this.$options.methods.addHistory.bind(this)(this.targetWxId,0,7)
+        this.addHistory(this.targetWxId)
         setTimeout(function () {
           document.querySelector('.sended').scrollTop = document.querySelector('.sended').scrollHeight
         },100)  
@@ -152,37 +158,38 @@
           document.querySelector('.addMore').style.right = '-100px'
         }
       },
-      addHistory: function (targetWxId,fromPlace=null,number=7) {
+      rightMsg(msg,time){
+        let node = `<div style="display:flex;direction:rtl;margin-top:20px">
+                      <img src='' alt="" width="40px" height="40px" style='border-radius:20px;margin-left:-20px'>
+                      <span>
+                        <p style="margin:0;color:#888;font-size:14px;direction:ltr">${time}</p>
+                        <span style="direction:ltr;display:inline-block;max-width:200px;word-wrap:break-word;padding:6px 12px;background:#9eea6a;border-radius:8px">${msg}</span>
+                      </span>
+                    </div>`
+        document.querySelector('.sended').innerHTML = document.querySelector('.sended').innerHTML + node
+      },
+      leftMsg(msg,time){
+        let node = `<div style="display:flex;margin-top:20px;align-items:center">
+                      <img src=${this.targetWxIcon} alt="#" width="40px" height="40px" style='border-radius:20px;margin-right:20px'>
+                      <span>
+                        <p style="margin:0;color:#888;font-size:14px">${time}</p>
+                        <span style="direction:ltr;display:inline-block;max-width:200px;word-wrap:break-word;padding:6px 12px;background:#9eea6a;border-radius:8px">${msg}</span>
+                      </span>
+                    </div>`
+        document.querySelector('.sended').innerHTML = document.querySelector('.sended').innerHTML + node
+      },
+      addHistory: function (targetWxId) {
         //单聊,其他会话选择相应的消息类型即可。
-        var _this = this
-        var conversationtype = RongIMLib.ConversationType.PRIVATE;
-        var count = number; // 2 <= count <= 20
-        var timestrap = fromPlace; //0, 1483950413013
-        RongIMClient.getInstance().getHistoryMessages(conversationtype, targetWxId, timestrap, count, {
-          onSuccess: function (list, hasMsg) {
-            list.sort(function (a, b) {
-                return a.sentTime < b.sentTime;
-            });
-            console.log(list)
-            if (list.length > 0) {
-              for (var i = 0; i < list.length; i++) {
-                let content = list[i].content.content;
-                let sendTime = list[i].sentTime;
-                let senderUserId = list[i].senderUserId
-                let time = _this.$options.methods.formatDateTime.bind(this)(sendTime)
-                if (senderUserId != _this.wxId) {
-                  var node = `<div style="display:flex;margin-top:20px;align-items:center"><img src=${_this.targetWxIcon} alt="#" width="40px" height="40px" style='border-radius:20px;margin-right:20px'><span><p style="margin:0;color:#888;font-size:14px">${time}</p><span style="direction:ltr;display:inline-block;max-width:200px;word-wrap:break-word;padding:6px 12px;background:#9eea6a;border-radius:8px">${content}</span></span></div>`
-                } else {
-                  var node = `<div style="display:flex;direction:rtl;margin-top:20px;align-items:center"><img src=${_this.wxIcon} alt="#" width="40px" height="40px" style='border-radius:20px;margin-left:20px'><span><p style="margin:0;color:#888;font-size:14px">${time}</p><span style="direction:ltr;display:inline-block;max-width:200px;word-wrap:break-word;padding:6px 12px;background:#9eea6a;border-radius:8px">${content}</span></span></div>`
-                }
-                document.querySelector('.sended').innerHTML = node + document.querySelector('.sended').innerHTML 
-              }
+        document.querySelector('.addMore').innerText = '加载历史消息'
+        this.$http.get('http://192.168.1.202:8111/wechat/v1/history?ryTargetId='+this.targetWxId).then((res)=>{
+          console.log(res)     
+          for(let i=0;i<res.body.data.length;i++){
+            let data = res.body.data[i]
+            if (data.roleType == 2) {
+              this.leftMsg(data.messageContent,data.rySendTime)
             } else {
-                alert('没有更多消息')
+              this.rightMsg(data.messageContent,data.rySendTime)
             }
-          },
-          onError: function (error) {
-            alert("获取历史消息失败");
           }
         })
       },
@@ -318,7 +325,7 @@
       sendMsg: function () {
         if (document.querySelector('.sendBox').innerText == '') { return alert("内容不能为空")}
         var myDate = new Date()
-        var time = this.$options.methods.formatDateTime(myDate)
+        var time = this.formatDateTime(myDate)
         var sendedMsg = document.querySelector('.sendBox').innerHTML
         var msg = new RongIMLib.TextMessage({content:sendedMsg});
         var conversationtype = RongIMLib.ConversationType.PRIVATE; // 单聊,其他会话选择相应的消息类型即可。
@@ -330,8 +337,7 @@
             //message 为发送的消息对象并且包含服务器返回的消息唯一Id和发送消息时间戳
             document.querySelector('.sendBox').innerText = ''
             // 同步到聊天框
-            var node = `<div style="display:flex;direction:rtl;margin-top:20px"><img src='' alt="" width="40px" height="40px" style='border-radius:20px;margin-left:-20px'><span><p style="margin:0;color:#888;font-size:14px;direction:ltr">${time}</p><span style="direction:ltr;display:inline-block;max-width:200px;word-wrap:break-word;padding:6px 12px;background:#9eea6a;border-radius:8px">${sendedMsg}</span></span></div>`
-            document.querySelector('.sended').innerHTML += node
+            _this.rightMsg(sendedMsg,time)
             document.querySelector('.sended').scrollTop = document.querySelector('.sended').scrollHeight
           },
           onError: function (errorCode,message) {
@@ -364,12 +370,20 @@
         });
       },
       sendByBoard: function (e) {
-        if (e.keyCode === 13) {
-          this.$options.methods.sendMsg.bind(this)()
+        if(13 == e.keyCode && (e.shiftKey || e.ctrlKey)) {
+        } else if (e.keyCode === 13) {
+          this.sendMsg()
         }
       }
     },
     mounted () {
+      this.$http.get('http://192.168.1.202:8111/wechat/v1/conversation').then((res)=>{
+        console.log(res)  
+        for(let i=0;i<res.body.data.length;i++){
+          this.wxUsers.push(res.body.data[i])
+          console.log(this.wxUsers) 
+        }
+      })
       // 融云初始化
       RongIMClient.init("ik1qhw09iptvp")
       var token = this.ryToken
@@ -435,25 +449,34 @@
         }
       })
       // 消息监听器
-      var getTime = this.$options.methods.formatDateTime.bind(this)
-      var _this = this
+      let _this = this
       RongIMClient.setOnReceiveMessageListener({
         // 接收到的消息
         onReceived: function (message) {
           console.log(message);
-          console.log('7777777')
           // 判断消息类型
           switch (message.messageType) {
             case RongIMClient.MessageType.TextMessage:
               var content = message.content.content; //消息内容
+              let data = JSON.parse(message.content.extra)
               // var targetId_pic = message.content.user.portrait; //发送者头像
-              var senderUserId = message.senderUserId //发送者id
+              let senderUserId = data.ryTargetId //发送者id
               // var nike_name = message.content.user.name; //发送者昵称
-              var time = getTime(message.receivedTime)
-              if(senderUserId == _this.targetWxId){}
-              var node = `<div style="display:flex;margin-top:20px"><img src=${_this.targetWxIcon} alt="#" width="40px" height="40px"><span><p style="margin:0;color:#888;font-size:14px">${time}</p><span style="direction:ltr;display:inline-block;max-width:200px;word-wrap:break-word;padding:6px 12px;background:#9eea6a;border-radius:8px">${content}</span></span></div>`
-              document.querySelector('.sended').innerHTML += node
-              document.querySelector('.sended').scrollTop = document.querySelector('.sended').scrollHeight
+              let time = _this.formatDateTime(data.rySendTime)
+              let parent = document.querySelector('.userList')
+              let child = document.querySelector('#user'+senderUserId)
+              parent.insertBefore(child,parent.firstChild)
+              if(senderUserId == _this.targetWxId){
+                if(data.roleType == 2){
+                  _this.rightMsg(content,time) 
+                  document.querySelector('.sended').scrollTop = document.querySelector('.sended').scrollHeight
+                } else {
+                  _this.leftMsg(content,time) 
+                  document.querySelector('.sended').scrollTop = document.querySelector('.sended').scrollHeight
+                }
+              } else {
+                document.querySelector('#msgRD'+senderUserId).style.display = 'block'
+              }              
               break;
             case RongIMClient.MessageType.ImageMessage:
               // do something...
@@ -515,14 +538,6 @@
 </script>
 
 <style scoped lang="stylus">
-  .redDot 
-    position absolute
-    top 10px
-    left 64px
-    width 10px
-    height 10px
-    border-radius 10px
-    background red
   .active
     border-bottom 2px #4d95fa solid
   .activeBG 
@@ -542,11 +557,11 @@
       width 700px
     .chatBox 
       position absolute
-      left 200px
+      left 160px
       top 50px
       height 80vh
       min-height 500px
-      width 1120px
+      width 1160px
       background white
       border-radius 10px
       overflow hidden
@@ -612,7 +627,7 @@
               background rgba(77,149,250,0.4)
       .sideBar 
         position: absolute;
-        width: 200px;
+        width: 240px;
         height: 100%;
         border-right: 1px #ddd solid
         overflow auto
@@ -643,15 +658,15 @@
             border-radius 6px
             &:hover 
               border-bottom: 2px solid #4d95fa
-        #userList
+        .userList
           padding 0
           list-style none
           overflow auto
           .users
             position relative
             display flex
-            height 50px
-            margin 10px 10px
+            height 54px
+            margin 6px 0px
             border-radius 10px
             align-items center
             overflow hidden
@@ -659,12 +674,20 @@
               height 30px
               width 30px
               border-radius 15px
-              margin 0 30px
+              margin 0 18px 0 10px
+            .redDot 
+              position absolute
+              top 10px
+              left 42px
+              width 10px
+              height 10px
+              border-radius 10px
+              background red
       .mainBox
         position absolute
         top 0
-        left 200px
-        width calc(100% - 500px)
+        left 240px
+        width calc(100% - 540px)
         height 100%
         .chatInfo
           position relative
@@ -745,7 +768,6 @@
     z-index: 9999;
     position: fixed;
     top: 180px;
-
     }
     /* 红包文字提示样式 */
     .money{
