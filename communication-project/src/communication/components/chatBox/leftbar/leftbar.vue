@@ -13,7 +13,7 @@
         <img :src="wxUser.ryIconUrl" alt="#">
         <div>
           <div style='width:100px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap'>{{wxUser.ryName}}</div>
-          <div style='position:absolute;top:6px;right:10px;white-space:nowrap;color:#777;font-size:12px'>{{wxUser.rySendTime}}</div>
+          <div style='position:absolute;top:6px;right:10px;white-space:nowrap;color:#777;font-size:12px'>{{wxUser.rySendTimeStr}}</div>
           <div style='width:120px;color:#777;font-size:14px;text-overflow:ellipsis;overflow:hidden'>{{wxUser.messageContent}}</div>
         </div>
         <span class="redDot" :id='"msgRD"+wxUser.ryTargetId'></span>
@@ -26,15 +26,13 @@
   export default {
     data () {
       return {
-        sortUsers: '1'
+        sortUsers: '1',
+        targetWxId: ''
       }
     },
     computed: {
       wxUsers () {
         return this.$store.state.wxUsers
-      },
-      targetWxId () {
-        return this.$store.state.targetWxIcon
       },
       newMsg () {
         return this.$store.state.newMsg
@@ -45,26 +43,26 @@
     },
     methods: {
       startChat: function (e) {
+        this.targetWxId = e.target.getAttribute('targetWxId')
         let target = {name:e.target.getAttribute('targetWxName'),id:e.target.getAttribute('targetWxId'),icon:e.target.getAttribute('targetWxIcon')}
         this.$store.commit('changeTarget',target) 
         document.querySelector('#msgRD'+e.target.getAttribute('targetWxId')).style.display = 'none'
       },
       getNewMsg () {
+        let targetId = this.newMsg.ryTargetId
         var _this = this
-        if(!(document.querySelector('#user'+ this.newMsg.ryTargetId))){this.$store.commit('addUser',this.newMsg)}
+        if(!(document.querySelector('#user'+ targetId))){this.$store.commit('addUser',_this.newMsg)}
         let parent = document.querySelector('.userList')
         setTimeout(function(){
-          let child = document.querySelector('#user'+ _this.newMsg.ryTargetId)
+          let child = document.querySelector('#user'+ targetId)
           parent.insertBefore(child,parent.firstChild)
-          if(_this.newMsg.ryTargetId !== _this.targetWxId){
-            document.querySelector('#msgRD'+_this.newMsg.ryTargetId).style.display = 'block'
+          if(targetId !== _this.targetWxId){
+            document.querySelector('#msgRD'+targetId).style.display = 'block'
         }   
 
         },200)
            
       }
-    },
-    mounted () {
     }
   }
 </script>
@@ -81,10 +79,11 @@
     overflow auto
     background white
     input 
-      display block
+      position relative
       height 28px
       margin 20px auto 30px auto
       padding-left 10px
+      display block
       border none
       border-radius 10px
       background #d6e6fc
@@ -96,40 +95,45 @@
       left 176px
       width 24px
     .sortPeople 
-      display flex
+      position relative
       width 100%
+      display flex
       font-size 14px
       div
-        flex 1
+        position relative
         width 50px
+        flex 1
         text-align center
         border-bottom: 2px solid white
         border-radius 6px
         &:hover 
           border-bottom: 2px solid #4d95fa
     .userList
+      position relative
       padding 0
       list-style none
       overflow auto
       .users
         position relative
-        display flex
         height 54px
         margin 6px 0px
+        display flex
         border-radius 10px
         align-items center
         overflow hidden
         img 
+          position relative
           height 30px
           width 30px
-          border-radius 15px
           margin 0 18px 0 10px
+          border-radius 15px
         .redDot 
           position absolute
           top 10px
           left 42px
           width 10px
           height 10px
+          display none
           border-radius 10px
           background red
 </style>

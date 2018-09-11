@@ -5,6 +5,7 @@ Vue.use(Vuex)
 export default new Vuex.Store({
   state: {
     // 聊天项目
+    token: {},
     session: 'chatBox',
     deviceName: '',
     wxUsers: [],
@@ -16,6 +17,9 @@ export default new Vuex.Store({
   },
   mutations: {
     // 聊天项目
+    setToken (state,token) {
+      state.token = token
+    },
     changeSession (state,session) {
       state.session = session
     },

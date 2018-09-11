@@ -19,11 +19,9 @@
           <li>3333</li> 
         </ul>
       </div>
-      <div class='commonRes' v-if='resItems==2'>
-        <ul class="quickResItems" @click="sendQuickMsg" @mousedown="deletQR">
-          <li v-for='Phrase in parentShortcutPhrase' :key='Phrase'>{{Phrase.content}}</li> 
-        </ul>
-      </div>
+      <ul class="quickResItems" @click="sendQuickMsg" @mousedown="deletQR" v-if='resItems==2'>
+        <li v-for='Phrase in parentShortcutPhrase' :key='Phrase'>{{Phrase.content}}</li> 
+      </ul>
     </div>
   </div>
 </template>
@@ -71,16 +69,18 @@
   
   .tools 
     position relative
-    background white
     width 300px
     height 100%
     border-left 1px solid #ddd
+    background white
     .tHeader
+      position relative
       height 40px
       display flex
       justify-content space-around
       align-items center
       div
+        position relative
         padding 10px
         flex 1
         text-align center
@@ -89,41 +89,46 @@
           border-bottom 2px #4d95fa solid
     .resBody
       .resEdit
-        margin 10px auto
-        width 240px
-        padding 10px
+        position relative
         height 80px
+        width 240px
+        margin 10px auto
+        padding 10px
         border 1px solid black
       .addRes
+        position relative
         margin-left 200px 
-        display inline-block
         padding 6px
+        display inline-block
         border-radius 10px 
         background rgba(77,149,250,0.8)
         color white
         font-size 14px
         font-weight bold
       .quickRes
+        position relative
         display flex
         justify-content space-around
         border-bottom 1px solid #ddd
         span
+          position relative
+          width 40%
           margin-top 14px
           padding 10px 0
           font-size 12px
-          width 40%
           text-align center
           &:hover
             background #ddd
       .quickResItems
         position relative
-        padding 0
-        margin 0
         width 300px
         height 500px
+        padding 0
+        margin 0
         overflow auto
         list-style none
-        li 
+        li  
+          position relative
           margin 10px
           padding 10px
           border-radius 10px 

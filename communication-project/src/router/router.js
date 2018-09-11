@@ -1,13 +1,12 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import communication from '@/communication/index'
-import logIn from '@/logIn/index'
-import register from '@/register/index'
+import communication from '@/communication/communication'
+import logIn from '@/logIn/logIn'
+import register from '@/register/register'
 
 Vue.use(Router)
 
 export default new Router({
-  mode: 'history',
   routes: [
     {
       path: '/',

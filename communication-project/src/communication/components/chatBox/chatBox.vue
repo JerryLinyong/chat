@@ -7,9 +7,9 @@
 </template>
 
 <script>
-  import leftbar from './leftbar'
-  import mainBox from './mainBox'
-  import rightbar from './rightbar'
+  import leftbar from './leftbar/leftbar'
+  import mainBox from './mainBox/mainBox'
+  import rightbar from './rightbar/rightbar'
   export default {
     components: {
       'leftbar': leftbar,
@@ -21,19 +21,11 @@
       }
     },
     created () {
-      function getCookie (cname) {
-        var name = cname + "=";
-        var ca = document.cookie.split(';');
-        for (var i=0; i<ca.length; i++) {
-          var c = ca[i].trim();
-          if (c.indexOf(name)==0) return c.substring(name.length,c.length);
-        }
-        return "";
-      }
       // 融云初始化
       RongIMClient.init("ik1qhw09iptvp")
       // 连接服务器
-      RongIMClient.connect(getCookie('ryToken'), {
+      let ryToken = this.$store.state.token.ryToken
+      RongIMClient.connect(ryToken, {
         onSuccess: function (userId) {
           console.log("Login successfully." + userId);
         },
@@ -99,9 +91,10 @@
 <style scoped lang="stylus">
   .chatSession
     position absolute
-    height 800px
     top 20px
-    left 20px
+    left 100px
+    height 86vh
+    width 66vw
     display flex
     user-select none
     overflow hidden

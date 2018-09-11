@@ -6,8 +6,8 @@
       <button class="addUser" @click="$store.commit('changeSession','childList')">创建子账号</button>
       <p class="deviceItems">已有设备</p>
       <ul class="devices" @click="getUsers">
-        <li v-for="device in devices" :key="device.wxId" :class='{activeBG:(wxId==device.wxId)?true:false}' class="deviceName">
-          <div style='position:absolute;width:100%;height:100%' :deviceName="device.deviceName" :wxId="device.wxId"></div>
+        <li v-for="device in devices" :key="device.wxId" :class="{activeBG:(deviceWxId==device.wxId)?true:false}" class="deviceName">
+          <div style='position:absolute;left:0;width:100%;height:100%' :deviceName="device.deviceName" :deviceWxId="device.wxId"></div>
           <img src="./head1.jpg" alt="#" style="margin:0 14px 0 0;width:40px;height:40px">
           <span>{{device.deviceName}}</span>
           <span class="redDot" :id='"msgRD"+device.wxId'></span>
@@ -21,37 +21,38 @@
   export default {
     data () {
       return {
-        devices: []
+        devices: [],
+        deviceWxId: ''
       }
     },
     methods: {
       getUsers: function (e) {
-        this.$store.commit('changeSession','chatBox')
-        this.$store.commit('userList','[]')
-        this.$store.commit('changeDevice',e.target.getAttribute('deviceName'))
-        document.querySelector('#msgRD' + this.wxId).style.display = 'none'
-        this.$http.get('http://192.168.1.226:8090/wechat/v1/conversation').then((res)=>{
-          console.log(res)
+        this.$store.commit('changeSession','chatBox') // 切换session
+        this.$store.commit('userList','[]') // 清空用户列表
+        this.$store.commit('changeDevice',e.target.getAttribute('deviceName')) // 获取设备名称
+        this.deviceWxId =e .target.getAttribute('deviceWxId')  // 改变目标id
+        document.querySelector('#msgRD' + this.deviceWxId).style.display = 'none' // 清除红点
+        this.$http.get('http://192.168.1.226:8090/wechat/v1/conversation?wxId='+this.deviceWxId).then((res)=>{
+          console.log('会话列表 from navbar',res)
           let wxUsers = []
-          for (var i=0;i<res.body.data.length;i++){
-            wxUsers.push(res.body.data[i])
+          for (var i=0;i<res.body.data.content.length;i++){
+            wxUsers.push(res.body.data.content[i])
           }
           this.$store.commit('userList',wxUsers)
-        })
+        }) // 获取用户列表
       },
     },
     created () {
       // 测试
       this.$http.get('http://192.168.1.226:8090/wechat/v1/conversation').then((res)=>{
-        console.log(res)
+        console.log('会话列表 from navbar',res)
         let wxUsers = []
-        for (var i=0;i<res.body.data.length;i++){
-          wxUsers.push(res.body.data[i])
+        for (var i=0;i<res.body.data.content.length;i++){
+          wxUsers.push(res.body.data.content[i])
         }
         this.$store.commit('userList',wxUsers)
       })
-      console.log(this.$store.wxUsers)
-      //
+      // 获取 cookie
       function getCookie (cname) {
         var name = cname + "=";
         var ca = document.cookie.split(';');
@@ -59,14 +60,18 @@
           var c = ca[i].trim();
           if (c.indexOf(name)==0) return c.substring(name.length,c.length);
         }
-        return "";
-      } 
-      this.$http.get('http://192.168.1.223:8120/demo/api/v1/user/child/device/list',{headers: {accessToken:getCookie('token')}}).then(function(getRes){
-        for (var i=0;i<getRes.body.data.length;i++) {
-          this.devices.push(getRes.body.data[i])
+      }
+      // 获取token
+      let token = getCookie('token')
+      let ryToken = getCookie('ryToken')
+      this.$store.commit('setToken',{token:token,ryToken:ryToken})
+      // 获取设备列表
+      this.$http.get('http://192.168.1.226:8090/api/v1/user/child/device/list',{headers: {accessToken:token}}).then(function(res){
+        for (var i=0;i<res.body.data.length;i++) {
+          this.devices.push(res.body.data[i])
         }
-        console.log(getRes)
-      })
+        console.log('设备列表 from navbar：',res)
+      }) 
     }
   }
 </script>
@@ -94,6 +99,7 @@
           left 64px
           width 10px
           height 10px
+          display none
           border-radius 10px
           background red
     .deviceItems

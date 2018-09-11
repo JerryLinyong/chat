@@ -1,12 +1,12 @@
 <template>
   <div class="mainBox">
-    <div class="bigImg" @click="clearImg"></div>
     <div class="chatInfo">
       <div class="chat">当前会话： &nbsp;{{deviceName}}--{{targetWxName}}</div>
       <div>备注:</div>
       <div class="addMore" @click="addHistory">加载历史消息</div>
     </div>
     <div class="sended" @click="changeSize" @scroll="showAddBtn">
+      <div class="bigImg" @click="clearImg"></div>
     </div>
     <div class="send">
       <div class="sendOthers">
@@ -16,9 +16,10 @@
               <div class="chatbox-emoji-panel" id="chatbox-emoji-panel"></div>
             </div>
           </div>
-          <img src="./emoji.png" alt="#"></div>
-        <input type="file" id="upFile" name="file" @change="addFile()" style="width:40px;height:40px;opacity:0;position:absolute;left:50px;font-size:0;">
+          <img src="./emoji.png" alt="#">
+        </div>
         <img src="./img.png" alt="#">
+        <input type="file" class="upFile" name="file" @change="addFile()"> 
         <div class="redPocket" @mouseenter='visible' @mouseleave='invisible' @click='showModel = true '>
           <img src="./redPocket.png" alt="#">
           <p v-show='see' class="money">发红包</p>
@@ -80,23 +81,23 @@
     },
     methods: {
       chatMsg () {
-        document.querySelector('.sended').innerHTML = ''
-        document.querySelector('.addMore').innerText = '加载历史消息'
+        document.querySelector('.sended').innerHTML = '' // 清空发送框
+        document.querySelector('.addMore').innerText = '加载历史消息' // 显示可加载历史消息
         new Promise ((suc,rej)=>{
           this.$http.get('http://192.168.1.226:8090/wechat/v1/history?ryTargetId='+this.targetWxId).then((res)=>{
-          console.log(res)
-            for(let i=0;i<res.body.data.length;i++){
-              let data = res.body.data[i]
+          console.log('历史消息 from mainBox',res)
+            for(let i=0;i<res.body.data.content.length;i++){
+              let data = res.body.data.content[i]
               if (data.roleType == 2) {
-                this.leftMsg(data.messageContent,data.rySendTime) 
+                this.leftMsg(data.messageContent,data.rySendTimeStr) 
                 suc('ok')
               } else {
-                this.rightMsg(data.messageContent,data.rySendTime)
+                this.rightMsg(data.messageContent,data.rySendTimeStr)
                 suc('ok')
               }
             }
           })
-        }).then(()=>{document.querySelector('.sended').scrollTop = document.querySelector('.sended').scrollHeight})
+        }).then(()=>{document.querySelector('.sended').scrollTop = document.querySelector('.sended').scrollHeight}) // 获取历史消息后拉到底部
       },
       //鼠标悬停红包图片，有提示性文字，发红包
       visible:function(){
@@ -120,7 +121,7 @@
                         <span style="direction:ltr;display:inline-block;max-width:200px;word-wrap:break-word;padding:6px 12px;background:#9eea6a;border-radius:8px">${msg}</span>
                       </span>
                     </div>`
-        document.querySelector('.sended').innerHTML = document.querySelector('.sended').innerHTML + node
+        document.querySelector('.sended').innerHTML = node + document.querySelector('.sended').innerHTML
       },
       leftMsg(msg,time){
         let node = `<div style="display:flex;margin-top:20px;align-items:center">
@@ -130,19 +131,19 @@
                         <span style="direction:ltr;display:inline-block;max-width:200px;word-wrap:break-word;padding:6px 12px;background:#9eea6a;border-radius:8px">${msg}</span>
                       </span>
                     </div>`
-        document.querySelector('.sended').innerHTML = document.querySelector('.sended').innerHTML + node
+        document.querySelector('.sended').innerHTML = node +  document.querySelector('.sended').innerHTML
       },
       addHistory: function () {
         //单聊,其他会话选择相应的消息类型即可。
         document.querySelector('.addMore').innerText = '加载历史消息'
         this.$http.get('http://192.168.1.226:8090/wechat/v1/history?ryTargetId='+this.targetWxId).then((res)=>{
           console.log(res)     
-          for(let i=0;i<res.body.data.length;i++){
-            let data = res.body.data[i]
+          for(let i=0;i<res.body.data.content.length;i++){
+            let data = res.body.data.content[i]
             if (data.roleType == 2) {
-              this.leftMsg(data.messageContent,data.rySendTime)
+              this.leftMsg(data.messageContent,data.rySendTimeStr)
             } else {
-              this.rightMsg(data.messageContent,data.rySendTime)
+              this.rightMsg(data.messageContent,data.rySendTimeStr)
             }
           }
         })
@@ -153,7 +154,7 @@
         }
       },
       addFile: function () {
-            var excelFile = document.querySelector('#upFile').files[0];
+            var excelFile = document.querySelector('.upFile').files[0];
             if (excelFile) {
                 var FR = new FileReader();
                 FR.addEventListener("load", function (e) {
@@ -171,7 +172,7 @@
       },
       changeSize: function (e) {
         if (e.target.classList.value === "file"){
-          var a = e.target.cloneNode(true)
+          let a = e.target.cloneNode(true)
           a.style.width = "760px"
           document.querySelector('.bigImg').appendChild(a)
         }
@@ -392,28 +393,23 @@
 <style scoped lang="stylus">
   .mainBox
     position relative
-    width 700px
+    width calc(100% - 540px)
     height 100%
     background white
-    .bigImg
-      position absolute
-      left 0px
-      top 0px
-      z-index 10000
-      width 700px
     .chatInfo
       position relative
       width 100%
       height 40px
       display flex
       border-bottom 1px #ddd solid
-      overflow hidden
       font-size 14px
       color #888
+      overflow hidden
       div
+        position relative
         height 20px
-        padding 10px 0
         margin 0 10px
+        padding 10px 0
         text-align center
       .addMore
         position absolute
@@ -423,34 +419,51 @@
     .sended
       position relative
       height calc(100% - 250px)
-      overflow auto
       padding 0 16px 10px 16px
+      overflow auto
+      .bigImg
+        position absolute
+        z-index 10000
+        left 0px
+        top -40px
+        width 700px
     .send
-      height 170px
+      position relative
+      height 200px
       .sendOthers
         position relative
         height 36px
         display flex
         border-top 1px #ddd solid
         .emoji
+          position relative
           .chatbox-tools
-            display none
             position absolute 
-            background white
             top -160px
+            left 10px 
             width 260px
             height 150px
-            left 10px 
+            display none
+            background white
             border 1px solid #ddd
             overflow auto
         img
+          position relative
           width 26px
           padding 5px 10px
+        .upFile
+          position absolute
+          left 50px 
+          width 40px
+          height 40px 
+          opacity 0
+          font-size 0
       .sendBox
+        position relative
         width calc(100% - 40px)
         height 114px
-        padding 0 20px
         margin 6px 0
+        padding 0 20px
         border none
         overflow auto
         &:focus
@@ -503,9 +516,9 @@
     .left{
     width: 40px;
     height: 40px;
+    padding-left: 10px;
     float: left;
     line-height: 40px;
-    padding-left: 10px;
     }
     .right{
     width:120px;

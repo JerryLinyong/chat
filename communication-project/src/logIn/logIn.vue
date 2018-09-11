@@ -52,7 +52,7 @@
                  输入用户名和密码，1,不存在该用户  2，密码错误
                  */
                  let data={'username':this.username,'password':this.password};
-                 this.$http.post('http://192.168.1.223:8120/demo/api/v1/user/device/login',data).then(function(res){
+                 this.$http.post('http://192.168.1.226:8090/api/v1/user/device/login',data).then(function(res){
                  console.log(res)
                 if(res.body.code==200){
                     this.errorinfo=false;     
