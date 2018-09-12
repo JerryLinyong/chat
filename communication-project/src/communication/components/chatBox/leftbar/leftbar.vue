@@ -3,9 +3,9 @@
     <input type="text" placeholder="搜索">
     <img src="./search.png" alt="#">
     <div class="sortPeople">
-      <div class="allP" @click='sortUsers=1' :class="{activeBG:(sortUsers==1)?true:false}">全部</div>
+      <div class="allP" @click='sortUsers=1' :class="{activeBG:(sortUsers==1)?true:false}">当前会话</div>
       <div class="starP" @click='sortUsers=2' :class="{activeBG:(sortUsers==2)?true:false}">星标</div>
-      <div class="blackP" @click='sortUsers=3' :class="{activeBG:(sortUsers==3)?true:false}">黑名单</div>
+      <div class="blackP" @click='sortUsers=3' :class="{activeBG:(sortUsers==3)?true:false}">全部</div>
     </div>
     <ul class="userList" @click='startChat' v-if='sortUsers==1'>
       <li class="users" v-for='wxUser in wxUsers' :key='wxUser.ryTargetId' :id='"user"+wxUser.ryTargetId' :class='{activeBG:(targetWxId==wxUser.ryTargetId)?true:false}'>
@@ -27,19 +27,26 @@
     data () {
       return {
         sortUsers: '1',
-        targetWxId: ''
+        targetWxId: '',
+        wxUsers: []
       }
     },
     computed: {
-      wxUsers () {
-        return this.$store.state.wxUsers
-      },
       newMsg () {
         return this.$store.state.newMsg
+      },
+      deviceWxId () {
+        return this.$store.state.deviceWxId
       }
     },
     watch: {
-      newMsg: 'getNewMsg'
+      newMsg: 'getNewMsg',
+      deviceWxId (newWxId) {
+        this.$http.get('http://192.168.1.202:8140/api/v1/user/child/getAgentInfoList?deviceWxId='+newWxId).then((res)=>{
+          console.log('会话列表 from navbar',res)
+          this.wxUsers = res.body.data
+        }) // 获取用户列表
+      }
     },
     methods: {
       startChat: function (e) {

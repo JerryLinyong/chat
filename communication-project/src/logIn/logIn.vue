@@ -52,9 +52,9 @@
                  输入用户名和密码，1,不存在该用户  2，密码错误
                  */
                  let data={'username':this.username,'password':this.password};
-                 this.$http.post('http://192.168.1.226:8090/api/v1/user/device/login',data).then(function(res){
+                 this.$http.post('http://192.168.1.202:8140/api/v1/user/device/loginAdmin',data).then(function(res){
                  console.log(res)
-                if(res.body.code==200){
+                if(res.body.status == 0){
                     this.errorinfo=false;     
                     function getCookie (cname) {
                         var name = cname + "=";
@@ -65,9 +65,10 @@
                         }
                         return "";
                     }   
-                    this.$options.methods.setCookie.bind(this)('token',res.body.data.token,7)
-                    this.$options.methods.setCookie.bind(this)('ryToken',res.body.data.user.ryToken,7)
-                    if (res.body.data.user.masterFlag === 1) {                      
+                    this.$options.methods.setCookie.bind(this)('kfRyUserId',res.body.data.kfRyUserId,7)
+                    this.$options.methods.setCookie.bind(this)('ryToken',res.body.data.ryToken,7)
+                    this.$options.methods.setCookie.bind(this)('parentUserId',res.body.data.parentUserId,7)
+                    if (res.body.data.masterFlag === 1) {                      
                         Toast({
                             mes: '登陆成功',
                             timeout: 500,
@@ -76,7 +77,7 @@
                                 this.$router.push('/')
                             }
                         })
-                    }else if (res.body.data.user.masterFlag === 0) {}      
+                    }else if (res.body.data.masterFlag === 0) {}      
                 }else{
                     Toast({
                         mes: '不存在该用户或密码错误',

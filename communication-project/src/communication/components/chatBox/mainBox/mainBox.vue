@@ -60,6 +60,9 @@
       deviceName () {
         return this.$store.state.deviceName
       },
+      deviceId () {
+        return this.$store.state.deviceId
+      },
       targetWxName () {
         return this.$store.state.targetWxName
       },
@@ -68,9 +71,6 @@
       },
       targetWxIcon () {
         return this.$store.state.targetWxIcon
-      },
-      wxUsers () {
-        return this.$store.state.wxUsers
       },
       newMsg () {
         return this.$store.state.newMsg
@@ -83,21 +83,7 @@
       chatMsg () {
         document.querySelector('.sended').innerHTML = '' // 清空发送框
         document.querySelector('.addMore').innerText = '加载历史消息' // 显示可加载历史消息
-        new Promise ((suc,rej)=>{
-          this.$http.get('http://192.168.1.226:8090/wechat/v1/history?ryTargetId='+this.targetWxId).then((res)=>{
-          console.log('历史消息 from mainBox',res)
-            for(let i=0;i<res.body.data.content.length;i++){
-              let data = res.body.data.content[i]
-              if (data.roleType == 2) {
-                this.leftMsg(data.messageContent,data.rySendTimeStr) 
-                suc('ok')
-              } else {
-                this.rightMsg(data.messageContent,data.rySendTimeStr)
-                suc('ok')
-              }
-            }
-          })
-        }).then(()=>{document.querySelector('.sended').scrollTop = document.querySelector('.sended').scrollHeight}) // 获取历史消息后拉到底部
+        this.addHistory().then(()=>{document.querySelector('.sended').scrollTop = document.querySelector('.sended').scrollHeight}) // 获取历史消息后拉到底部
       },
       //鼠标悬停红包图片，有提示性文字，发红包
       visible:function(){
@@ -113,7 +99,7 @@
           document.querySelector('.addMore').style.right = '-100px'
         }
       },
-      rightMsg(msg,time){
+      rightMsg(msg,time,type=0){
         let node = `<div style="display:flex;direction:rtl;margin-top:20px">
                       <img src='' alt="" width="40px" height="40px" style='border-radius:20px;margin-left:-20px'>
                       <span>
@@ -121,9 +107,13 @@
                         <span style="direction:ltr;display:inline-block;max-width:200px;word-wrap:break-word;padding:6px 12px;background:#9eea6a;border-radius:8px">${msg}</span>
                       </span>
                     </div>`
-        document.querySelector('.sended').innerHTML = node + document.querySelector('.sended').innerHTML
+        if (type == 0) {
+          document.querySelector('.sended').innerHTML = node + document.querySelector('.sended').innerHTML
+        } else if (type == 1) {
+          document.querySelector('.sended').innerHTML = document.querySelector('.sended').innerHTML + node
+        }
       },
-      leftMsg(msg,time){
+      leftMsg (msg,time) {
         let node = `<div style="display:flex;margin-top:20px;align-items:center">
                       <img src=${this.targetWxIcon} alt="#" width="40px" height="40px" style='border-radius:20px;margin-right:20px'>
                       <span>
@@ -133,20 +123,22 @@
                     </div>`
         document.querySelector('.sended').innerHTML = node +  document.querySelector('.sended').innerHTML
       },
-      addHistory: function () {
-        //单聊,其他会话选择相应的消息类型即可。
-        document.querySelector('.addMore').innerText = '加载历史消息'
-        this.$http.get('http://192.168.1.226:8090/wechat/v1/history?ryTargetId='+this.targetWxId).then((res)=>{
-          console.log(res)     
-          for(let i=0;i<res.body.data.content.length;i++){
-            let data = res.body.data.content[i]
-            if (data.roleType == 2) {
-              this.leftMsg(data.messageContent,data.rySendTimeStr)
-            } else {
-              this.rightMsg(data.messageContent,data.rySendTimeStr)
+      addHistory: function (x) {
+        return new Promise((suc,rej)=>{
+          this.$http.get('http://192.168.1.226:8090/wechat/v1/history?ryTargetId='+this.targetWxId).then((res)=>{
+            console.log('历史消息 from mainBox',res)     
+            for(let i=0;i<res.body.data.content.length;i++){
+              let data = res.body.data.content[i]
+              if (data.roleType == 2) {
+                this.leftMsg(data.messageContent,data.rySendTimeStr)
+                suc()
+              } else {
+                this.rightMsg(data.messageContent,data.rySendTimeStr)
+                suc()
+              }
             }
-          }
-        })
+          })
+        }) 
       },
       clearImg: function (e) {
          if (e.target.classList.value === "file"){
@@ -270,51 +262,22 @@
         return (m + '-' + d + ' ' + h + ':' + minute)
       },
       sendMsg: function () {
-        if (document.querySelector('.sendBox').innerText == '') { return alert("内容不能为空")}
+        if (document.querySelector('.sendBox').innerText == '') { 
+          return alert("内容不能为空")
+        }
         var myDate = new Date()
         var time = this.formatDateTime(myDate)
-        var sendedMsg = document.querySelector('.sendBox').innerHTML
-        var msg = new RongIMLib.TextMessage({content:sendedMsg});
-        var conversationtype = RongIMLib.ConversationType.PRIVATE; // 单聊,其他会话选择相应的消息类型即可。
+        let sendedMsg = document.querySelector('.sendBox').innerHTML
         var targetWxId = this.targetWxId ; // 目标 Idvar time = formatDateTime(message.receivedTime)
-        // 发送消息
-        var _this = this
-        RongIMClient.getInstance().sendMessage(conversationtype, targetWxId, msg, {
-          onSuccess: function (message) {
-            //message 为发送的消息对象并且包含服务器返回的消息唯一Id和发送消息时间戳
-            document.querySelector('.sendBox').innerText = ''
-            // 同步到聊天框
-            _this.rightMsg(sendedMsg,time)
-            document.querySelector('.sended').scrollTop = document.querySelector('.sended').scrollHeight
-          },
-          onError: function (errorCode,message) {
-            var info = '';
-            switch (errorCode) {
-              case RongIMLib.ErrorCode.TIMEOUT:
-                info = '超时';
-                break;
-              case RongIMLib.ErrorCode.UNKNOWN_ERROR:
-                info = '未知错误';
-                break;
-              case RongIMLib.ErrorCode.REJECTED_BY_BLACKLIST:
-                info = '在黑名单中，无法向对方发送消息';
-                break;
-              case RongIMLib.ErrorCode.NOT_IN_DISCUSSION:
-                info = '不在讨论组中';
-                break;
-              case RongIMLib.ErrorCode.NOT_IN_GROUP:
-                info = '不在群组中';
-                break;
-              case RongIMLib.ErrorCode.NOT_IN_CHATROOM:
-                info = '不在聊天室中';
-                break;
-              default :
-                info = x;
-                break;
-            }
-            console.log('发送失败:' + info);
-          }
-        });
+        let data = JSON.stringify({
+          fromDeviceWxId: this.deviceId,
+          messageContent: sendedMsg,
+          ryTargetId: this.targetWxId
+        })
+        this.$http.post('http://192.168.1.226:8090/api/v1/webMessage/',data)
+        setTimeout(()=>{document.querySelector('.sendBox').innerHTML = ''}) 
+        this.rightMsg(sendedMsg,time,1)
+        document.querySelector('.sended').scrollTop = document.querySelector('.sended').scrollHeight
       },
       sendByBoard: function (e) {
         if(13 == e.keyCode && (e.shiftKey || e.ctrlKey)) {

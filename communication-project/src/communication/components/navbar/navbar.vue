@@ -28,18 +28,9 @@
     methods: {
       getUsers: function (e) {
         this.$store.commit('changeSession','chatBox') // 切换session
-        this.$store.commit('userList','[]') // 清空用户列表
-        this.$store.commit('changeDevice',e.target.getAttribute('deviceName')) // 获取设备名称
-        this.deviceWxId =e .target.getAttribute('deviceWxId')  // 改变目标id
+        this.$store.commit('changeDevice',{name:e.target.getAttribute('deviceName'),id:e.target.getAttribute('deviceWxId')}) // 获取设备名称
+        this.deviceWxId = e .target.getAttribute('deviceWxId')  // 改变目标id
         document.querySelector('#msgRD' + this.deviceWxId).style.display = 'none' // 清除红点
-        this.$http.get('http://192.168.1.226:8090/wechat/v1/conversation?wxId='+this.deviceWxId).then((res)=>{
-          console.log('会话列表 from navbar',res)
-          let wxUsers = []
-          for (var i=0;i<res.body.data.content.length;i++){
-            wxUsers.push(res.body.data.content[i])
-          }
-          this.$store.commit('userList',wxUsers)
-        }) // 获取用户列表
       },
     },
     created () {
@@ -62,14 +53,13 @@
         }
       }
       // 获取token
-      let token = getCookie('token')
+      let kfRyUserId = getCookie('kfRyUserId')
       let ryToken = getCookie('ryToken')
-      this.$store.commit('setToken',{token:token,ryToken:ryToken})
+      let parentUserId = getCookie('parentUserId')
+      this.$store.commit('setToken',{token:kfRyUserId,ryToken:ryToken,parentUserId:parentUserId})
       // 获取设备列表
-      this.$http.get('http://192.168.1.226:8090/api/v1/user/child/device/list',{headers: {accessToken:token}}).then(function(res){
-        for (var i=0;i<res.body.data.length;i++) {
-          this.devices.push(res.body.data[i])
-        }
+      this.$http.get('http://192.168.1.202:8140/api/v1/user/child/device/list?kfRyUserId='+ kfRyUserId).then(function(res){
+        this.devices = res.body.data
         console.log('设备列表 from navbar：',res)
       }) 
     }

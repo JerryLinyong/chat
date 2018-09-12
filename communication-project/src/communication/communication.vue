@@ -28,6 +28,9 @@
       session () {
         return this.$store.state.session
       }
+    },
+    created () {
+      
     }
   }
 </script>
