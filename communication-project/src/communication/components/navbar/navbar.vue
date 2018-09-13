@@ -34,15 +34,6 @@
       },
     },
     created () {
-      // 测试
-      this.$http.get('http://192.168.1.226:8090/wechat/v1/conversation').then((res)=>{
-        console.log('会话列表 from navbar',res)
-        let wxUsers = []
-        for (var i=0;i<res.body.data.content.length;i++){
-          wxUsers.push(res.body.data.content[i])
-        }
-        this.$store.commit('userList',wxUsers)
-      })
       // 获取 cookie
       function getCookie (cname) {
         var name = cname + "=";

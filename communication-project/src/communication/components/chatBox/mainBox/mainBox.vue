@@ -1,22 +1,19 @@
 <template>
   <div class="mainBox">
     <div class="chatInfo">
-      <div class="chat">当前会话： &nbsp;{{deviceName}}--{{targetWxName}}</div>
+      <div class="chat">当前会话： &nbsp;{{deviceName}}--{{target.name}}</div>
       <div>备注:</div>
-      <div class="addMore" @click="addHistory">加载历史消息</div>
+      <div class="addMore" @click="addHistory">加载历史消息</div>          
     </div>
-    <div class="sended" @click="changeSize" @scroll="showAddBtn">
-      <div class="bigImg" @click="clearImg"></div>
-    </div>
+    <div class="bigImg" @click='clearImg()'></div>
+    <div class="sended" @click="changeSize" @scroll="showAddBtn"></div>
     <div class="send">
       <div class="sendOthers">
-        <div class="emoji" @click="showMoreEmoji()">
-          <div class="chatbox-tools emjon"><!-- face-box表情盒子 -->
-            <div class="chatbox-tools-emoji">                        
-              <div class="chatbox-emoji-panel" id="chatbox-emoji-panel"></div>
-            </div>
+        <div class="emoji" @click="showEmoji=!showEmoji">
+          <div class="emojiBox" v-if='showEmoji' @click='pickEmoji'>
+            <!-- 添加上背景图片的网上地址，就可以实现表情的传输 -->
+            <span class='emojiImg' v-for='X in 129' :key='X' :style="{backgroundPositionX:(-X+1)*24+'px'}" style='display:inline-block;width:24px;height:24px;background-size:cover' contenteditable="false"></span>
           </div>
-          <img src="./emoji.png" alt="#">
         </div>
         <img src="./img.png" alt="#">
         <input type="file" class="upFile" name="file" @change="addFile()"> 
@@ -50,6 +47,7 @@
   export default {
     data () {
       return {
+        showEmoji: false,
         isShow: 0,
         see:false,
         showModel:false,
@@ -61,25 +59,23 @@
         return this.$store.state.deviceName
       },
       deviceId () {
-        return this.$store.state.deviceId
+        return this.$store.state.deviceWxId
       },
-      targetWxName () {
-        return this.$store.state.targetWxName
-      },
-      targetWxId () {
-        return this.$store.state.targetWxId
-      },
-      targetWxIcon () {
-        return this.$store.state.targetWxIcon
+      target () {
+        return this.$store.state.target
       },
       newMsg () {
         return this.$store.state.newMsg
       }
     },
     watch: {
-      targetWxId: 'chatMsg'
+      target:'chatMsg'
     },
     methods: {
+      pickEmoji (e) {
+        let emoji = e.target.cloneNode(true)
+        document.querySelector('.sendBox').appendChild(emoji)
+      },
       chatMsg () {
         document.querySelector('.sended').innerHTML = '' // 清空发送框
         document.querySelector('.addMore').innerText = '加载历史消息' // 显示可加载历史消息
@@ -93,6 +89,7 @@
         this.see=false;
       },
       showAddBtn: function () {
+        this.showEmoji = false
         if (document.querySelector('.sended').scrollTop === 0) {
           document.querySelector('.addMore').style.right = '100px'
         } else {
@@ -103,8 +100,8 @@
         let node = `<div style="display:flex;direction:rtl;margin-top:20px">
                       <img src='' alt="" width="40px" height="40px" style='border-radius:20px;margin-left:-20px'>
                       <span>
-                        <p style="margin:0;color:#888;font-size:14px;direction:ltr">${time}</p>
-                        <span style="direction:ltr;display:inline-block;max-width:200px;word-wrap:break-word;padding:6px 12px;background:#9eea6a;border-radius:8px">${msg}</span>
+                        <div style="color:#888;font-size:14px;direction:rtl">${time}</div>
+                        <div style="display:inline-block;direction:ltr;max-width:200px;word-wrap:break-word;padding:6px 12px;background:#9eea6a;border-radius:8px">${msg}</div>
                       </span>
                     </div>`
         if (type == 0) {
@@ -115,17 +112,17 @@
       },
       leftMsg (msg,time) {
         let node = `<div style="display:flex;margin-top:20px;align-items:center">
-                      <img src=${this.targetWxIcon} alt="#" width="40px" height="40px" style='border-radius:20px;margin-right:20px'>
+                      <img src=${this.target.icon} alt="#" width="40px" height="40px" style='border-radius:20px;margin-right:20px'>
                       <span>
-                        <p style="margin:0;color:#888;font-size:14px">${time}</p>
-                        <span style="direction:ltr;display:inline-block;max-width:200px;word-wrap:break-word;padding:6px 12px;background:#9eea6a;border-radius:8px">${msg}</span>
+                        <div style="color:#888;font-size:14px">${time}</div>
+                        <div style="display:inline-block;max-width:200px;word-wrap:break-word;padding:6px 12px;background:#9eea6a;border-radius:8px">${msg}</div>
                       </span>
                     </div>`
         document.querySelector('.sended').innerHTML = node +  document.querySelector('.sended').innerHTML
       },
       addHistory: function (x) {
         return new Promise((suc,rej)=>{
-          this.$http.get('http://192.168.1.226:8090/wechat/v1/history?ryTargetId='+this.targetWxId).then((res)=>{
+          this.$http.get('http://192.168.1.202:8140/wechat/v1/history?ryTargetId='+this.target.id).then((res)=>{
             console.log('历史消息 from mainBox',res)     
             for(let i=0;i<res.body.data.content.length;i++){
               let data = res.body.data.content[i]
@@ -139,12 +136,7 @@
             }
           })
         }) 
-      },
-      clearImg: function (e) {
-         if (e.target.classList.value === "file"){
-          document.querySelector('.bigImg').removeChild(e.target)
-        }
-      },
+      },  
       addFile: function () {
             var excelFile = document.querySelector('.upFile').files[0];
             if (excelFile) {
@@ -162,89 +154,15 @@
                 FR.readAsDataURL(excelFile);
             }
       },
+      clearImg () {
+        document.querySelector('.bigImg').innerHTML  = ''
+      },
       changeSize: function (e) {
         if (e.target.classList.value === "file"){
           let a = e.target.cloneNode(true)
           a.style.width = "760px"
           document.querySelector('.bigImg').appendChild(a)
         }
-      },
-      showMoreEmoji: function () {
-        var panel = document.querySelector(".chatbox-tools");
-        //定义融云API
-        var RongIMEmoji = RongIMLib.RongIMEmoji;
-        var config = {/*face参数列表*/
-          size: 24,
-          // url: '//cdn.ronghub.com/emojis-hd.png?replace', // 传入服务器路径        
-          url: 'https://rongcloud.github.io/websdk-demo/res/emojis-hd.png?replace', // 传入在线路径
-          // url: './emojis-hd.png?replace', // 传入本地路径
-          lang: 'zh',
-          extension: {
-            dataSource: {
-              u1F914: {
-                zh: '思考',
-                en: 'thinking face',
-                tag: '🤔',
-                position: '0px 0px'
-              }
-            },
-          url: 'https://cdn.ronghub.com/thinking-face.png'
-          }
-        };
-
-        RongIMEmoji.init(config);
-        // appendChild('init: 初始化RongIMEmoji');
-        function appendChild(text) {
-          var div = document.createElement('span');
-          div.innerHTML = '<span contenteditable="true">'+text+'</span>';
-          var child = div.childNodes[0];
-          msgnew.appendChild(child);
-            console.log("添加show条目");
-        }
-        function getEmojiDetailList() {/*加载表情列表*/
-          var shadowDomList = [];
-          for (var i = 0; i < RongIMEmoji.list.length; i++) {
-            var value = RongIMEmoji.list[i];
-            shadowDomList.push(value.node);
-          }
-          return shadowDomList;
-        }
-        function bindClickEmoji(emojis) {
-          for(var i=0;i<emojis.length;i++){                  
-            var emojiHtml = emojis[i];
-            panel.appendChild(emojiHtml);
-            emojiHtml.onclick = clickEmoji;
-          }
-        }
-        function clickEmoji(event) {/*获取当前表情*/
-          var e = event || window.event;
-          var imgface = e.target || e.srcElement;
-          if (document.all && !document.addEventListener === false) {
-          }
-          var ij=imgface.getAttribute("name");
-          //通过融云远端函数，处理数据生成消息框内容
-          var imgval = RongIMEmoji.symbolToHTML(ij);
-          // appendChild('显示消息 ' + imgval);
-          console.log("face show");
-          var msgStr = document.querySelector('.sendBox').innerHTML;
-          // 加入当前选中的表情
-          msgStr = msgStr + imgval;
-          // 插入到文本框中
-          document.querySelector('.sendBox').innerHTML = msgStr + '&nbsp;';
-          emojiBox.style.display = 'none'           
-        }
-        var emojiBox =  document.querySelector('.chatbox-tools')
-        if (this.isShow === 0 ) {
-          emojiBox.style.display = 'block';
-          this.isShow = 1
-          //加载表情face-list
-          var emoji = getEmojiDetailList();/*加载face列表*/
-          bindClickEmoji(emoji);/*face列表分配*/
-          return false;
-        } else {
-          emojiBox.style.display = 'none';
-          this.isShow = 0
-        } 
       },
       formatDateTime: function (inputTime) {
         var date = new Date(inputTime);
@@ -262,27 +180,33 @@
         return (m + '-' + d + ' ' + h + ':' + minute)
       },
       sendMsg: function () {
-        if (document.querySelector('.sendBox').innerText == '') { 
+        if (document.querySelector('.sendBox').innerHTML === '') { 
           return alert("内容不能为空")
         }
-        var myDate = new Date()
-        var time = this.formatDateTime(myDate)
+        let time = this.formatDateTime((new Date()))
         let sendedMsg = document.querySelector('.sendBox').innerHTML
-        var targetWxId = this.targetWxId ; // 目标 Idvar time = formatDateTime(message.receivedTime)
         let data = JSON.stringify({
           fromDeviceWxId: this.deviceId,
           messageContent: sendedMsg,
-          ryTargetId: this.targetWxId
+          ryTargetId: this.target.id
         })
-        this.$http.post('http://192.168.1.226:8090/api/v1/webMessage/',data)
-        setTimeout(()=>{document.querySelector('.sendBox').innerHTML = ''}) 
+        console.log('发送消息成功',data)
+        this.$http.post('http://192.168.1.227:8090/api/v1/webMessage/',data).then(()=>{
+          console.log('发送消息成功',data)
+        })
         this.rightMsg(sendedMsg,time,1)
         document.querySelector('.sended').scrollTop = document.querySelector('.sended').scrollHeight
+        setTimeout(() => {
+          document.querySelector('.sendBox').innerHTML = ''
+        }); 
       },
       sendByBoard: function (e) {
         if(13 == e.keyCode && (e.shiftKey || e.ctrlKey)) {
         } else if (e.keyCode === 13) {
           this.sendMsg()
+          setTimeout(()=>{
+            document.querySelector('.sendBox').innerHTML = ''
+          })
         }
       }
     },
@@ -298,9 +222,8 @@
             case RongIMClient.MessageType.TextMessage:
               let content = message.content.content; //消息内容
               let newMsg = JSON.parse(message.content.extra)
-              _this.$store.commit('getNewMsg',newMsg)
               let time = newMsg.rySendTime
-              if(_this.newMsg.ryTargetId == _this.targetWxId){
+              if(_this.newMsg.ryTargetId == _this.target.id){
                 if(_this.newMsg.roleType == 2){
                   _this.rightMsg(content,time) 
                   document.querySelector('.sended').scrollTop = document.querySelector('.sended').scrollHeight
@@ -308,6 +231,8 @@
                   _this.leftMsg(content,time) 
                   document.querySelector('.sended').scrollTop = document.querySelector('.sended').scrollHeight
                 }
+              } else {
+                _this.$store.commit('getNewMsg',newMsg)
               }   
               break;
             case RongIMClient.MessageType.ImageMessage:
@@ -354,6 +279,10 @@
 </script>
 
 <style scoped lang="stylus">
+  
+  .emojiImg
+    background-image url(./emojis-hd.png)
+
   .mainBox
     position relative
     width calc(100% - 540px)
@@ -380,16 +309,15 @@
         width 90px
         transition 1s
     .sended
-      position relative
       height calc(100% - 250px)
       padding 0 16px 10px 16px
       overflow auto
-      .bigImg
-        position absolute
-        z-index 10000
-        left 0px
-        top -40px
-        width 700px
+    .bigImg
+      position absolute
+      z-index 10000
+      left 0px
+      top -40px
+      width 700px
     .send
       position relative
       height 200px
@@ -400,13 +328,17 @@
         border-top 1px #ddd solid
         .emoji
           position relative
-          .chatbox-tools
+          width 30px
+          height 30px
+          transform scale(0.9)
+          margin 2px 6px
+          background: url('./emoji.png')
+          .emojiBox
             position absolute 
             top -160px
             left 10px 
             width 260px
             height 150px
-            display none
             background white
             border 1px solid #ddd
             overflow auto
@@ -429,6 +361,7 @@
         padding 0 20px
         border none
         overflow auto
+        line-height 2.2em
         &:focus
           outline none
       .sending

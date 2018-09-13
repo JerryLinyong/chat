@@ -5,16 +5,26 @@
     <div class="sortPeople">
       <div class="allP" @click='sortUsers=1' :class="{activeBG:(sortUsers==1)?true:false}">当前会话</div>
       <div class="starP" @click='sortUsers=2' :class="{activeBG:(sortUsers==2)?true:false}">星标</div>
-      <div class="blackP" @click='sortUsers=3' :class="{activeBG:(sortUsers==3)?true:false}">全部</div>
+      <div class="blackP" @click='getAllF()' :class="{activeBG:(sortUsers==3)?true:false}">全部</div>
     </div>
     <ul class="userList" @click='startChat' v-if='sortUsers==1'>
-      <li class="users" v-for='wxUser in wxUsers' :key='wxUser.ryTargetId' :id='"user"+wxUser.ryTargetId' :class='{activeBG:(targetWxId==wxUser.ryTargetId)?true:false}'>
+      <li class="users" v-for='wxUser in wxUsers' :key='wxUser.ryTargetId' :id='"user"+wxUser.ryTargetId' :class='{activeBG:(target.id==wxUser.ryTargetId)?true:false}'>
         <div style='position:absolute;width:100%;height:100%' :targetWxId='wxUser.ryTargetId' :targetWxIcon='wxUser.ryIconUrl' :targetWxName='wxUser.ryName'></div>
         <img :src="wxUser.ryIconUrl" alt="#">
         <div>
           <div style='width:100px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap'>{{wxUser.ryName}}</div>
           <div style='position:absolute;top:6px;right:10px;white-space:nowrap;color:#777;font-size:12px'>{{wxUser.rySendTimeStr}}</div>
-          <div style='width:120px;color:#777;font-size:14px;text-overflow:ellipsis;overflow:hidden'>{{wxUser.messageContent}}</div>
+          <div style='width:120px;color:#777;font-size:14px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap'>{{wxUser.messageContent}}</div>
+        </div>
+        <span class="redDot" :id='"msgRD"+wxUser.ryTargetId'></span>
+      </li>
+    </ul>
+    <ul class="userList" v-if='sortUsers==3' @click='startChat'>
+      <li class="users" v-for='wxUser in allFrigs' :key='wxUser.ryTargetId' :id='"user"+wxUser.ryTargetId' :class='{activeBG:(target.id==wxUser.ryTargetId)?true:false}'>
+        <div style='position:absolute;width:100%;height:100%' :targetWxId='wxUser.ryTargetId' :targetWxIcon='wxUser.customerIcon' :targetWxName='wxUser.customerNickName'></div>
+        <img :src="wxUser.customerIcon" alt="#">
+        <div>
+          <div style='width:100px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap'>{{wxUser.customerNickName}}</div>
         </div>
         <span class="redDot" :id='"msgRD"+wxUser.ryTargetId'></span>
       </li>
@@ -27,11 +37,14 @@
     data () {
       return {
         sortUsers: '1',
-        targetWxId: '',
-        wxUsers: []
+        wxUsers: [],
+        allFrigs: []
       }
     },
     computed: {
+      target () {
+        return this.$store.state.target
+      },
       newMsg () {
         return this.$store.state.newMsg
       },
@@ -42,15 +55,22 @@
     watch: {
       newMsg: 'getNewMsg',
       deviceWxId (newWxId) {
-        this.$http.get('http://192.168.1.202:8140/api/v1/user/child/getAgentInfoList?deviceWxId='+newWxId).then((res)=>{
-          console.log('会话列表 from navbar',res)
-          this.wxUsers = res.body.data
-        }) // 获取用户列表
+        this.sortUsers=1
+        this.$http.get('http://192.168.1.202:8140/wechat/v1/conversation?wxId='+newWxId).then((res)=>{
+          console.log('会话列表 from leftbar',res)
+          this.wxUsers = res.body.data.content
+        }) // 获取会话列表
       }
     },
     methods: {
+      getAllF () {
+        this.sortUsers=3
+        this.$http.get('http://192.168.1.202:8140/api/v1/user/child/getAgentInfoList?deviceWxId='+this.deviceWxId).then((res)=>{
+          console.log('用户列表 from leftbar',res)
+          this.allFrigs = res.body.data
+        }) // 获取用户列表
+      },
       startChat: function (e) {
-        this.targetWxId = e.target.getAttribute('targetWxId')
         let target = {name:e.target.getAttribute('targetWxName'),id:e.target.getAttribute('targetWxId'),icon:e.target.getAttribute('targetWxIcon')}
         this.$store.commit('changeTarget',target) 
         document.querySelector('#msgRD'+e.target.getAttribute('targetWxId')).style.display = 'none'
@@ -63,7 +83,7 @@
         setTimeout(function(){
           let child = document.querySelector('#user'+ targetId)
           parent.insertBefore(child,parent.firstChild)
-          if(targetId !== _this.targetWxId){
+          if(targetId !== _this.target.id){
             document.querySelector('#msgRD'+targetId).style.display = 'block'
         }   
 

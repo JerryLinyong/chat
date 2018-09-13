@@ -17,14 +17,15 @@
         </ul>
       </div>
       <div class='commonRes' v-if='resItems==2'>
-        <ul class="quickResItems" @click="sendQuickMsg">
-          <li>13</li>
-          <li v-for='Phrase in parentShortcutPhrase' :key='Phrase'>{{Phrase.content}}</li> 
+        <ul class="quickResItems" @click="sendQuickMsg" style='margin-top:20px'>
+          <li v-for='commonQ in commonQR' :key='commonQ.createTime'>{{commonQ.content}}</li> 
         </ul>
       </div>
     </div>
     <div class="userInfo" v-if='quickItems==2'>
-      <img src="" alt="无法显示">
+      <img :src="target.icon" alt="无法显示">
+      <p>昵称：{{target.name}}</p>
+      <p>微信ID：{{target.id}}</p>
     </div>
   </div>
 </template>
@@ -36,12 +37,16 @@
         quickItems: '1',
         resItems: '1',
         selfQR: [],
-        userId: ''
+        userId: '',
+        commonQR: []
       }
     },
     computed: {
       token () {
         return this.$store.state.token
+      },
+      target () {
+        return this.$store.state.target
       }
     },
     methods: {
@@ -49,6 +54,7 @@
         this.resItems = '2'
         this.$http.get('http://192.168.1.202:8140/api/v1/shortcutPhrase/parentList?parentUserId='+this.$store.state.token.parentUserId).then(res=>{
           console.log('公共快捷语 from rightbar',res)
+          this.commonQR = res.body.data.list
         })
       },
       getUserInfo () {
@@ -77,8 +83,7 @@
             console.log('添加快捷语成功 from rightbar',res)
             this.$http.get('http://192.168.1.202:8140/api/v1/shortcutPhrase/list?kfRyUserId='+this.userId).then(res=>{
               console.log('快捷语 from rightbar',res)
-              let selfQR = res.body.data.list
-              this.$store.commit('getSelfQR',selfQR)
+              this.selfQR = res.body.data.list
             })
           })
         }
@@ -237,4 +242,14 @@
           padding 10px
           border-radius 10px 
           background rgba(77,149,250,0.4)
+    .userInfo
+      position relative
+      text-align center
+      img
+        position relative
+        width 100px
+        height 100px
+        margin 20px 0 0 0
+        border-radius 200px
+
 </style>

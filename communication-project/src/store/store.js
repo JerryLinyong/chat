@@ -8,9 +8,7 @@ export default new Vuex.Store({
     session: 'chatBox',
     deviceName: '',
     deviceWxId: '',
-    targetWxName: '',
-    targetWxId: '',
-    targetWxIcon: '',
+    target: {},
     newMsg: ''
   },
   mutations: {
@@ -25,9 +23,7 @@ export default new Vuex.Store({
       state.deviceWxId = device.id
     }, // communication/components/navbar
     changeTarget (state,target) {
-      state.targetWxName = target.name
-      state.targetWxId = target.id
-      state.targetWxIcon = target.icon
+      state.target = target
     }, // communication/components/leftbar
     addUser (state,user) {
       state.wxUsers.unshift(user)
