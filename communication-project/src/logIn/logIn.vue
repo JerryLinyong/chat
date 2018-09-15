@@ -52,7 +52,7 @@
                  输入用户名和密码，1,不存在该用户  2，密码错误
                  */
                  let data={'username':this.username,'password':this.password};
-                 this.$http.post('http://192.168.1.202:8140/api/v1/user/device/loginAdmin',data).then(function(res){
+                 this.$http.post('http://192.168.1.223:8090/api/v1/user/device/loginAdmin',data).then(function(res){
                  console.log(res)
                 if(res.body.status == 0){
                     this.errorinfo=false;     
@@ -84,7 +84,7 @@
                         timeout: 1000,
                         icon: 'error',
                         callback: () => {
-                            this.$router.push('/logIn')
+                            this.$router.push('/communication')
                         }
                     });
                     this.errorinfo=false;

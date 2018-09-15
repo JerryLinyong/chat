@@ -7,17 +7,16 @@ import register from '@/register/register'
 Vue.use(Router)
 
 export default new Router({
-  mode: 'history',
   routes: [
     {
       path: '/',
-      name: 'communication',
-      component: communication
-    },
-    {
-      path: '/logIn',
       name: 'logIn',
       component: logIn
+    },
+    {
+      path: '/communication',
+      name: 'communication',
+      component: communication
     },
     {
       path: '/register',

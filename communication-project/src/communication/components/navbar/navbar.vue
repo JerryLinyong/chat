@@ -49,7 +49,7 @@
       let parentUserId = getCookie('parentUserId')
       this.$store.commit('setToken',{token:kfRyUserId,ryToken:ryToken,parentUserId:parentUserId})
       // 获取设备列表
-      this.$http.get('http://192.168.1.202:8140/api/v1/user/child/device/list?kfRyUserId='+ kfRyUserId).then(function(res){
+      this.$http.get('http://192.168.1.223:8090/api/v1/user/child/device/list?kfRyUserId='+ kfRyUserId).then(function(res){
         this.devices = res.body.data
         console.log('设备列表 from navbar：',res)
       }) 

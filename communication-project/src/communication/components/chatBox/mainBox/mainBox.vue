@@ -122,7 +122,7 @@
       },
       addHistory: function (x) {
         return new Promise((suc,rej)=>{
-          this.$http.get('http://192.168.1.202:8140/wechat/v1/history?ryTargetId='+this.target.id).then((res)=>{
+          this.$http.get('http://192.168.1.223:8090/wechat/v1/history?ryTargetId='+this.target.id).then((res)=>{
             console.log('历史消息 from mainBox',res)     
             for(let i=0;i<res.body.data.content.length;i++){
               let data = res.body.data.content[i]
@@ -191,7 +191,7 @@
           ryTargetId: this.target.id
         })
         console.log('发送消息成功',data)
-        this.$http.post('http://192.168.1.227:8090/api/v1/webMessage/',data).then(()=>{
+        this.$http.post('http://192.168.1.223:8090/api/v1/webMessage/',data).then(()=>{
           console.log('发送消息成功',data)
         })
         this.rightMsg(sendedMsg,time,1)

@@ -56,7 +56,7 @@
       newMsg: 'getNewMsg',
       deviceWxId (newWxId) {
         this.sortUsers=1
-        this.$http.get('http://192.168.1.202:8140/wechat/v1/conversation?wxId='+newWxId).then((res)=>{
+        this.$http.get('http://192.168.1.223:8090/wechat/v1/conversation?wxId='+newWxId).then((res)=>{
           console.log('会话列表 from leftbar',res)
           this.wxUsers = res.body.data.content
         }) // 获取会话列表
@@ -65,7 +65,7 @@
     methods: {
       getAllF () {
         this.sortUsers=3
-        this.$http.get('http://192.168.1.202:8140/api/v1/user/child/getAgentInfoList?deviceWxId='+this.deviceWxId).then((res)=>{
+        this.$http.get('http://192.168.1.223:8090/api/v1/user/child/getAgentInfoList?deviceWxId='+this.deviceWxId).then((res)=>{
           console.log('用户列表 from leftbar',res)
           this.allFrigs = res.body.data
         }) // 获取用户列表

@@ -52,21 +52,21 @@
     methods: {
       getCQR () {
         this.resItems = '2'
-        this.$http.get('http://192.168.1.202:8140/api/v1/shortcutPhrase/parentList?parentUserId='+this.$store.state.token.parentUserId).then(res=>{
+        this.$http.get('http://192.168.1.223:8090/api/v1/shortcutPhrase/parentList?parentUserId='+this.$store.state.token.parentUserId).then(res=>{
           console.log('公共快捷语 from rightbar',res)
           this.commonQR = res.body.data.list
         })
       },
       getUserInfo () {
         this.quickItems="2"
-        this.$http.get('http://192.168.1.202:8140/api/v1/user/child/getAgentInfo?wxId='+this.$store.state.targetWxId).then(res=>{
+        this.$http.get('http://192.168.1.223:8090/api/v1/user/child/getAgentInfo?wxId='+this.$store.state.targetWxId).then(res=>{
           console.log('当前用户信息 from rightbar',res)
         })
       },
       deletQR: function (e) {
         if (e.button === 2) {
           if(window.confirm('确定删除？')){
-            this.$http.post(`http://192.168.1.202:8140/api/v1/shortcutPhrase/delete?ryUserId=${this.userId}&shortcutPhraseId=${e.target.getAttribute('id')}`).then((res)=>{
+            this.$http.post(`http://192.168.1.223:8090/api/v1/shortcutPhrase/delete?ryUserId=${this.userId}&shortcutPhraseId=${e.target.getAttribute('id')}`).then((res)=>{
               console.log('删除快捷语成功 from rightbar',res)
               document.querySelector('.quickResItems').removeChild(e.target)
             })
@@ -79,9 +79,9 @@
           alert('请输入内容')
         } else {
           document.querySelector('.resEdit').innerText = ""
-          this.$http.get(`http://192.168.1.202:8140/api/v1/shortcutPhrase/insertShortcut?content=${text}&kfRyUserId=${this.userId}`).then((res)=>{
+          this.$http.get(`http://192.168.1.223:8090/api/v1/shortcutPhrase/insertShortcut?content=${text}&kfRyUserId=${this.userId}`).then((res)=>{
             console.log('添加快捷语成功 from rightbar',res)
-            this.$http.get('http://192.168.1.202:8140/api/v1/shortcutPhrase/list?kfRyUserId='+this.userId).then(res=>{
+            this.$http.get('http://192.168.1.223:8090/api/v1/shortcutPhrase/list?kfRyUserId='+this.userId).then(res=>{
               console.log('快捷语 from rightbar',res)
               this.selfQR = res.body.data.list
             })
@@ -104,7 +104,7 @@
         onSuccess: function (userId) {
           _this.userId = userId
           console.log("Login successfully." + userId);
-          _this.$http.get('http://192.168.1.202:8140/api/v1/shortcutPhrase/list?kfRyUserId='+userId).then(res=>{
+          _this.$http.get('http://192.168.1.223:8090/api/v1/shortcutPhrase/list?kfRyUserId='+userId).then(res=>{
             console.log('快捷语 from rightbar',res)
             _this.selfQR = res.body.data.list
           })
