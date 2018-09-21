@@ -29,9 +29,9 @@
   .chatSession
     position absolute
     top 20px
-    left 100px
-    height 86vh
-    width 66vw
+    left 80px
+    height 92%
+    width 86%
     display flex
     user-select none
     overflow hidden

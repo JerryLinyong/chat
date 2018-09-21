@@ -74,7 +74,7 @@
                             timeout: 500,
                             icon: 'success',
                             callback: () => {
-                                this.$router.push('/')
+                                this.$router.push('/communication')
                             }
                         })
                     }else if (res.body.data.masterFlag === 0) {}      
@@ -84,7 +84,7 @@
                         timeout: 1000,
                         icon: 'error',
                         callback: () => {
-                            this.$router.push('/communication')
+                            this.$router.push('/')
                         }
                     });
                     this.errorinfo=false;

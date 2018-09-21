@@ -55,6 +55,7 @@
     watch: {
       newMsg: 'getNewMsg',
       deviceWxId (newWxId) {
+        this.target.id = ''
         this.sortUsers=1
         this.$http.get('http://192.168.1.223:8090/wechat/v1/conversation?wxId='+newWxId).then((res)=>{
           console.log('会话列表 from leftbar',res)
@@ -100,8 +101,9 @@
 
   .sideBar
     position relative
-    width 240px
+    width 232px
     height 100%
+    padding 0 4px
     border-right 1px #ddd solid
     overflow auto
     background white

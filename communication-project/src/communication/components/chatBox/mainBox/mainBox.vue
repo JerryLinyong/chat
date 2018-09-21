@@ -1,7 +1,7 @@
 <template>
   <div class="mainBox">
     <div class="chatInfo">
-      <div class="chat">当前会话： &nbsp;{{deviceName}}--{{target.name}}</div>
+      <div class="chat">当前会话： &nbsp;{{deviceName}}--<span id='chattingF'>{{target.name}}</span></div>
       <div>备注:</div>
       <div class="addMore" @click="addHistory">加载历史消息</div>          
     </div>
@@ -69,9 +69,14 @@
       }
     },
     watch: {
-      target:'chatMsg'
+      target:'chatMsg',
+      deviceId: 'clearChat'
     },
     methods: {
+      clearChat () {
+        document.querySelector('.sended').innerHTML = ''
+        this.target.name = ''
+      },
       pickEmoji (e) {
         let emoji = e.target.cloneNode(true)
         document.querySelector('.sendBox').appendChild(emoji)
@@ -101,7 +106,7 @@
                       <img src='' alt="" width="40px" height="40px" style='border-radius:20px;margin-left:-20px'>
                       <span>
                         <div style="color:#888;font-size:14px;direction:rtl">${time}</div>
-                        <div style="display:inline-block;direction:ltr;max-width:200px;word-wrap:break-word;padding:6px 12px;background:#9eea6a;border-radius:8px">${msg}</div>
+                        <div style="display:inline-block;direction:ltr;max-width:240px;word-wrap:break-word;padding:6px 12px;background:#9eea6a;border-radius:8px">${msg}</div>
                       </span>
                     </div>`
         if (type == 0) {
@@ -115,7 +120,7 @@
                       <img src=${this.target.icon} alt="#" width="40px" height="40px" style='border-radius:20px;margin-right:20px'>
                       <span>
                         <div style="color:#888;font-size:14px">${time}</div>
-                        <div style="display:inline-block;max-width:200px;word-wrap:break-word;padding:6px 12px;background:#9eea6a;border-radius:8px">${msg}</div>
+                        <div style="display:inline-block;max-width:240px;word-wrap:break-word;padding:6px 12px;background:#9eea6a;border-radius:8px">${msg}</div>
                       </span>
                     </div>`
         document.querySelector('.sended').innerHTML = node +  document.querySelector('.sended').innerHTML
@@ -160,7 +165,7 @@
       changeSize: function (e) {
         if (e.target.classList.value === "file"){
           let a = e.target.cloneNode(true)
-          a.style.width = "760px"
+          a.style.width = '700px'
           document.querySelector('.bigImg').appendChild(a)
         }
       },
@@ -180,8 +185,11 @@
         return (m + '-' + d + ' ' + h + ':' + minute)
       },
       sendMsg: function () {
+        console.log(this.target)
         if (document.querySelector('.sendBox').innerHTML === '') { 
           return alert("内容不能为空")
+        } else if ( !this.target.id ) {
+          return alert('请选择聊天对象')
         }
         let time = this.formatDateTime((new Date()))
         let sendedMsg = document.querySelector('.sendBox').innerHTML
@@ -278,7 +286,7 @@
   }
 </script>
 
-<style scoped lang="stylus">
+<style lang="stylus">
   
   .emojiImg
     background-image url(./emojis-hd.png)
@@ -312,12 +320,16 @@
       height calc(100% - 250px)
       padding 0 16px 10px 16px
       overflow auto
+      p
+        margin 0
+        display inline-block
     .bigImg
       position absolute
       z-index 10000
-      left 0px
+      right 30px
       top -40px
-      width 700px
+      height 100%
+      overflow auto
     .send
       position relative
       height 200px
@@ -364,6 +376,9 @@
         line-height 2.2em
         &:focus
           outline none
+        p
+          display inline-block
+          margin 0
       .sending
         position absolute
         right 10px
